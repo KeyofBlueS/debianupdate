@@ -307,9 +307,22 @@ esac
 
 givemehelp(){
 echo "
+# debianupdate
+
+# Version:    1.0.0
+# Author:     KeyofBlueS
+# Repository: https://github.com/KeyofBlueS/debianupdate
+# License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
+
+### DESCRIZIONE
 Lo script bash debianupdate esegue l'aggiornamento di un sistema Debian provando a ridurre al minimo le interazioni con l'utente, ad eseguire
 soltanto operazioni sicure ed a richiedere l'intervento manuale unicamente per operazioni ritenute rischiose.
 
+### CONFIGURAZIONE
+È possibile aumentare o diminuire il volume del segnale acustico tramite la scheda audio (tramite sox), agendo sul valore della
+variabile "GAIN" (linea 85; default "-50")
+
+### UTILIZZO
 È possibile utilizzare le seguenti opzioni:
 --menu	      Avvia il menu principale
 
