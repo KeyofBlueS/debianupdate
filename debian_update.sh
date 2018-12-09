@@ -305,7 +305,7 @@ echo -e "\e[1;31m## HAI SBAGLIATO TASTO.......cerca di stare un po' attento\e[0m
 esac
 }
 
-help(){
+givemehelp(){
 echo "
 Lo script bash debianupdate esegue l'aggiornamento di un sistema Debian provando a ridurre al minimo le interazioni con l'utente, ad eseguire
 soltanto operazioni sicure ed a richiedere l'intervento manuale unicamente per operazioni ritenute rischiose.
@@ -338,7 +338,7 @@ then
    audio_null
 elif [ "$1" = "--help" ]
 then
-   help
+   givemehelp
 else
 #   menu
 #   audio_beep
