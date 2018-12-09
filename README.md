@@ -18,6 +18,7 @@ sudo chown root:root /opt/debian-update/debian_update.sh
 sudo chmod 755 /opt/debian-update/debian_update.sh
 sudo chmod +x /opt/debian-update/debian_update.sh
 sudo ln -s /opt/debian-update/debian_update.sh /usr/local/bin/debianupdate
+```
 
 ### CONFIGURAZIONE
 È possibile aumentare o diminuire il volume del segnale acustico tramite la scheda audio (tramite sox), agendo sul valore della
