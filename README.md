@@ -31,7 +31,7 @@ $ debianupdate
 ```
 
 È possibile utilizzare le seguenti opzioni:
-```sh
+```
 --menu	      Avvia il menu principale
 
 --audio-beep  Imposta il segnale acustico tramite lo speaker interno (richiede beep)
