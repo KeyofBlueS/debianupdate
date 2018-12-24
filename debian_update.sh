@@ -9,7 +9,6 @@ mkdir -p $HOME/.status_files/
 touch $HOME/.status_files/debianupdate-status
 
 APT_LISTCHANGES_FRONTEND=none
-SERVERIP=ftp.us.debian.org
 STEP=pre_update_process
 REPO="$(cat /etc/apt/sources.list | grep "deb " | grep "http" | grep "main" | grep -m1 -oP '[^/]*\.[^\./]*(:|/)' | sed -e 's/\(:.*\/\|\/\)//g' | uniq)"
 
@@ -150,13 +149,13 @@ esac
 ping_repo(){
 while true
 do
-fping -r0 -t 2000 $SERVERIP | grep "alive"
+fping -r0 -t 2000 $REPO | grep "alive"
 if [ $? = 0 ]; then
 	break
 fi
 	$BEEP0
 	echo -e "\e[1;34m
-REPOSYTORY @ $SERVERIP è\e[0m" "\e[1;31mOFFLINE o rete non raggiungibile\e[0m"
+REPOSYTORY @ $REPO è\e[0m" "\e[1;31mOFFLINE o rete non raggiungibile\e[0m"
 	echo -e "\e[1;31mPremi INVIO per uscire, o attendi 1 secondo per riprovare\e[0m"
 	if read -t 1 _e; then
 		exit 0
@@ -251,7 +250,7 @@ end
 
 update_error(){
 echo -e "\e[1;34m
-REPOSYTORY @ $SERVERIP è\e[0m" "\e[1;31mOFFLINE o rete non raggiungibile\e[0m"
+REPOSYTORY @ $REPO è\e[0m" "\e[1;31mOFFLINE o rete non raggiungibile\e[0m"
 echo -e "\e[1;31mPremi INVIO per uscire, o attendi 1 secondo per riprovare\e[0m"
 if read -t 1 _e; then
 	exit 0
