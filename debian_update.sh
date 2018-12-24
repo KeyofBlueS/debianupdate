@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Version:    1.0.0
+# Version:    1.0.1
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/debianupdate
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
@@ -11,6 +11,7 @@ touch $HOME/.status_files/debianupdate-status
 APT_LISTCHANGES_FRONTEND=none
 SERVERIP=ftp.us.debian.org
 STEP=pre_update_process
+REPO="$(cat /etc/apt/sources.list | grep "deb " | grep "http" | grep "main" | grep -m1 -oP '[^/]*\.[^\./]*(:|/)' | sed -e 's/\(:.*\/\|\/\)//g' | uniq)"
 
 #echo -n "Checking dependencies... "
 for name in fping apt aptitude
@@ -40,63 +41,62 @@ read -p "Scelta (B/S/N/E): " testo
 case $testo in
     B|b)
 	{
-  echo -e "\e[1;34m
+	echo -e "\e[1;34m
 ## HAI SCELTO BEEP\e[0m"
 	audio_beep
 	}
     ;;
     S|s)
 	{
-  echo -e "\e[1;34m
+	echo -e "\e[1;34m
 ## HAI SCELTO SOX\e[0m"
 	audio_sox
 	}
     ;;
     N|n)
 	{
-  echo -e "\e[1;34m
+	echo -e "\e[1;34m
 ## HAI SCELTO NULL\e[0m"
 	audio_null
 	}
     ;;
     E|e)
 	{
-			echo -e "\e[1;34mEsco dal programma\e[0m"
-			exit 0
+	echo -e "\e[1;34mEsco dal programma\e[0m"
+	exit 0
 	}
     ;;
     *)
-echo -e "\e[1;31mHai sbagliato tasto.......cerca di stare un po' attento\e[0m"
-    menu
+	echo -e "\e[1;31mHai sbagliato tasto.......cerca di stare un po' attento\e[0m"
+	menu
     ;;
 esac
-	}
+}
 
 audio_beep(){
-			AUDIO=BEEP
-			BEEP0=( "beep" )
-			BEEP1=( "beep -f 2000 -r 3 -D 50 -l 60 -n" )
-			BEEP2=( "beep -f 1000 -n -f 2000 -n -f 1500" )
+AUDIO=BEEP
+BEEP0=( "beep" )
+BEEP1=( "beep -f 2000 -r 3 -D 50 -l 60 -n" )
+BEEP2=( "beep -f 1000 -n -f 2000 -n -f 1500" )
 checkoldupdateprocess
-	}
+}
 
 audio_sox(){
-			AUDIO=SOX
-			GAIN="-50"
-			BEEP0=( "play -q -n synth 0.2 square 1000 gain $GAIN fade h 0.01" )
-			BEEP1=( "play -q -n synth 0.13 square 2000 gain $GAIN : synth 0.13 square 2000 gain $GAIN fade h 0.01 : synth 0.13 square 2000 gain $GAIN fade h 0.01 : synth 0.3 square 1000 gain $GAIN fade h 0.01" )
-			BEEP2=( "play -q -n synth 0.2 square 1000 gain $GAIN : synth 0.2 square 2000 gain $GAIN fade h 0.01 : synth 0.2 square 1500 gain $GAIN fade h 0.01" )
-			
+AUDIO=SOX
+GAIN=-50
+BEEP0=( "play -q -n synth 0.2 square 1000 gain $GAIN fade h 0.01" )
+BEEP1=( "play -q -n synth 0.13 square 2000 gain $GAIN : synth 0.13 square 2000 gain $GAIN fade h 0.01 : synth 0.13 square 2000 gain $GAIN fade h 0.01 : synth 0.3 square 1000 gain $GAIN fade h 0.01" )
+BEEP2=( "play -q -n synth 0.2 square 1000 gain $GAIN : synth 0.2 square 2000 gain $GAIN fade h 0.01 : synth 0.2 square 1500 gain $GAIN fade h 0.01" )
 checkoldupdateprocess
-	}
+}
 
 audio_null(){
-			AUDIO=NULL
-			BEEP0="echo BEEP"
-			BEEP1="echo BEEP"
-			BEEP2="echo BEEP"
+AUDIO=NULL
+BEEP0="echo BEEP"
+BEEP1="echo BEEP"
+BEEP2="echo BEEP"
 checkoldupdateprocess
-	}
+}
 
 checkoldupdateprocess(){
 for pid in $(pgrep "debianupdate"); do
@@ -105,7 +105,7 @@ for pid in $(pgrep "debianupdate"); do
     fi 
 done
 ping_repo
-	}
+}
 
 updatekill(){
 echo -e "\e[1;34m
@@ -125,7 +125,7 @@ read -p "Scelta (S/N): " testo
 case $testo in
     S|s)
 	{
-  echo -e "\e[1;34m
+	echo -e "\e[1;34m
 ## Termino il precedente processo di aggiornamento...\e[0m"
 	kill -9 $pid
 	sudo killall -9 apt-get
@@ -135,145 +135,129 @@ case $testo in
     ;;
     N|n)
 	{
-  echo -e "\e[1;34m
+	echo -e "\e[1;34m
 ## Esco dal programma\e[0m"
 	exit 0
 	}
     ;;
     *)
-echo -e "\e[1;31mHai sbagliato tasto.......cerca di stare un po' attento\e[0m"
-    updatekill
+	echo -e "\e[1;31mHai sbagliato tasto.......cerca di stare un po' attento\e[0m"
+	updatekill
     ;;
 esac
-	}
+}
 
 ping_repo(){
 while true
 do
-  fping -r0 -t 2000 $SERVERIP | grep "alive"
-  if [ $? = 0 ]; then
+fping -r0 -t 2000 $SERVERIP | grep "alive"
+if [ $? = 0 ]; then
 	break
-  fi
+fi
 	$BEEP0
 	echo -e "\e[1;34m
 REPOSYTORY @ $SERVERIP è\e[0m" "\e[1;31mOFFLINE o rete non raggiungibile\e[0m"
 	echo -e "\e[1;31mPremi INVIO per uscire, o attendi 1 secondo per riprovare\e[0m"
-  if read -t 1 _e; then
-        exit 0
-  fi
-	done
+	if read -t 1 _e; then
+		exit 0
+	fi
+done
 echo "" > $HOME/.status_files/debianupdate-status
 $STEP
-	}
+}
 
 pre_update_process(){
 echo -e "\e[1;31m
 ## PRE UPDATE PROCESS STARTED (AUDIO: $AUDIO)
 \e[0m"
-			$BEEP1
-			echo -e "\e[1;34m## INSTALLO EVENTUALI DIPENDENZE MANCANTI ##\e[0m" && sudo apt-get -f install -y
-#			$BEEP1
-			echo -e "\e[1;34m## CONFIGURO EVENTUALI PACCHETTI IN SOSPESO ##\e[0m" && sudo dpkg --configure --pending
-			STEP=update_process
-			ping_repo
-	}
+$BEEP1
+echo -e "\e[1;34m## INSTALLO EVENTUALI DIPENDENZE MANCANTI ##\e[0m" && sudo apt-get -f install -y
+echo -e "\e[1;34m## CONFIGURO EVENTUALI PACCHETTI IN SOSPESO ##\e[0m" && sudo dpkg --configure --pending
+STEP=update_process
+ping_repo
+}
 
 update_process(){
 echo -e "\e[1;31m
 ## UPDATE PROCESS STARTED (AUDIO: $AUDIO)
 \e[0m"
-			$BEEP1
-			echo "" > $HOME/.status_files/debianupdate-status
-			echo -e "\e[1;34m## UPDATE ##\e[0m" && sudo apt-get update 2>&1 | tee $HOME/.status_files/debianupdate-status
-				cat $HOME/.status_files/debianupdate-status | grep 'Risoluzione di "ftp.us.debian.org" temporaneamente non riuscita'
-				if [ $? = 0 ]; then
-					echo -e "\e[1;34m
-REPOSYTORY @ $SERVERIP è\e[0m" "\e[1;31mOFFLINE o rete non raggiungibile\e[0m"
-					echo -e "\e[1;31mPremi INVIO per uscire, o attendi 1 secondo per riprovare\e[0m"
-					if read -t 1 _e; then
-					exit 0
-					fi
-					ping_repo
-				else
-				STEP=upgrade1_process
-				ping_repo
-				fi
-	}
+$BEEP1
+echo "" > $HOME/.status_files/debianupdate-status
+echo -e "\e[1;34m## UPDATE ##\e[0m" && sudo apt-get update 2>&1 | tee $HOME/.status_files/debianupdate-status
+	cat $HOME/.status_files/debianupdate-status | grep -q 'Risoluzione di "$REPO" temporaneamente non riuscita'
+	if [ $? = 0 ]; then
+		update_error
+	else
+	STEP=upgrade1_process
+	ping_repo
+	fi
+}
 
 upgrade1_process(){
-			$BEEP1
-			echo "" > $HOME/.status_files/debianupdate-status
-			echo -e "\e[1;34m## UPGRADE ##\e[0m" && sudo apt-get upgrade -y 2>&1 | tee $HOME/.status_files/debianupdate-status
-				cat $HOME/.status_files/debianupdate-status | grep 'Risoluzione di "ftp.us.debian.org" temporaneamente non riuscita'
-				if [ $? = 0 ]; then
-					echo -e "\e[1;34m
-REPOSYTORY @ $SERVERIP è\e[0m" "\e[1;31mOFFLINE o rete non raggiungibile\e[0m"
-					echo -e "\e[1;31mPremi INVIO per uscire, o attendi 1 secondo per riprovare\e[0m"
-					if read -t 1 _e; then
-					exit 0
-					fi
-					ping_repo
-				else
-				STEP=upgrade2_process
-				ping_repo
-				fi
-	}
+$BEEP1
+echo "" > $HOME/.status_files/debianupdate-status
+echo -e "\e[1;34m## UPGRADE ##\e[0m" && sudo apt-get upgrade -y 2>&1 | tee $HOME/.status_files/debianupdate-status
+	cat $HOME/.status_files/debianupdate-status | grep -q 'Risoluzione di "$REPO" temporaneamente non riuscita'
+	if [ $? = 0 ]; then
+		update_error
+	else
+	STEP=upgrade2_process
+	ping_repo
+	fi
+}
 
 upgrade2_process(){
-			$BEEP1
-			echo "" > $HOME/.status_files/debianupdate-status
-			echo -e "\e[1;34m## UPGRADE (with-new-pkgs) ##\e[0m" && sudo apt-get upgrade --with-new-pkgs -y 2>&1 | tee $HOME/.status_files/debianupdate-status
-				cat $HOME/.status_files/debianupdate-status | grep 'Risoluzione di "ftp.us.debian.org" temporaneamente non riuscita'
-				if [ $? = 0 ]; then
-					echo -e "\e[1;34m
-REPOSYTORY @ $SERVERIP è\e[0m" "\e[1;31mOFFLINE o rete non raggiungibile\e[0m"
-					echo -e "\e[1;31mPremi INVIO per uscire, o attendi 1 secondo per riprovare\e[0m"
-					if read -t 1 _e; then
-					exit 0
-					fi
-					ping_repo
-				else
-				STEP=distupgrade_process
-				ping_repo
-				fi
-	}
+$BEEP1
+echo "" > $HOME/.status_files/debianupdate-status
+echo -e "\e[1;34m## UPGRADE (with-new-pkgs) ##\e[0m" && sudo apt-get upgrade --with-new-pkgs -y 2>&1 | tee $HOME/.status_files/debianupdate-status
+	cat $HOME/.status_files/debianupdate-status | grep -q 'Risoluzione di "$REPO" temporaneamente non riuscita'
+	if [ $? = 0 ]; then
+		update_error
+	else
+	STEP=distupgrade_process
+	ping_repo
+	fi
+}
 
 distupgrade_process(){
-			$BEEP1
-			echo "" > $HOME/.status_files/debianupdate-status
-			echo -e "\e[1;34m## DIST-UPGRADE ##\e[0m" && sudo apt-get dist-upgrade 2>&1 | tee $HOME/.status_files/debianupdate-status
-				cat $HOME/.status_files/debianupdate-status | grep 'Risoluzione di "ftp.us.debian.org" temporaneamente non riuscita'
-				if [ $? = 0 ]; then
-					echo -e "\e[1;34m
-REPOSYTORY @ $SERVERIP è\e[0m" "\e[1;31mOFFLINE o rete non raggiungibile\e[0m"
-					echo -e "\e[1;31mPremi INVIO per uscire, o attendi 1 secondo per riprovare\e[0m"
-					if read -t 1 _e; then
-					exit 0
-					fi
-					ping_repo
-				else
-				echo "" > $HOME/.status_files/debianupdate-status
-				clean_process
-				fi
-	}
+$BEEP1
+echo "" > $HOME/.status_files/debianupdate-status
+echo -e "\e[1;34m## DIST-UPGRADE ##\e[0m" && sudo apt-get dist-upgrade 2>&1 | tee $HOME/.status_files/debianupdate-status
+	cat $HOME/.status_files/debianupdate-status | grep -q 'Risoluzione di "$REPO" temporaneamente non riuscita'
+	if [ $? = 0 ]; then
+		update_error
+	else
+	echo "" > $HOME/.status_files/debianupdate-status
+	clean_process
+	fi
+}
 
 clean_process(){
-			$BEEP1
-			echo -e "\e[1;34m## AUTOREMOVE ##\e[0m" && sudo apt-get autoremove -y
-			$BEEP1
-			echo -e "\e[1;34m## PURGE ##\e[0m" && sudo aptitude purge ~c
-#			sudo dpkg --purge `dpkg -l | egrep "^rc" | cut -d' ' -f3`
-			$BEEP1
-			echo -e "\e[1;34m## AUTOCLEAN ##\e[0m" && sudo apt-get autoclean
-			$BEEP1
-			echo -e "\e[1;34m## CLEAN ##\e[0m" && sudo apt-get clean
-			$BEEP1
-			$BEEP2
-			echo -e "\e[1;34m## FINITO! ##\e[0m"
-
+$BEEP1
+echo -e "\e[1;34m## AUTOREMOVE ##\e[0m" && sudo apt-get autoremove -y
+$BEEP1
+echo -e "\e[1;34m## PURGE ##\e[0m" && sudo aptitude purge ~c
+#sudo dpkg --purge `dpkg -l | egrep "^rc" | cut -d' ' -f3`
+$BEEP1
+echo -e "\e[1;34m## AUTOCLEAN ##\e[0m" && sudo apt-get autoclean
+$BEEP1
+echo -e "\e[1;34m## CLEAN ##\e[0m" && sudo apt-get clean
+$BEEP1
+$BEEP2
+echo -e "\e[1;34m## FINITO! ##\e[0m"
 STEP=update_process
 end
-	}
+}
+
+update_error(){
+echo -e "\e[1;34m
+REPOSYTORY @ $SERVERIP è\e[0m" "\e[1;31mOFFLINE o rete non raggiungibile\e[0m"
+echo -e "\e[1;31mPremi INVIO per uscire, o attendi 1 secondo per riprovare\e[0m"
+if read -t 1 _e; then
+	exit 0
+fi
+ping_repo
+}
 
 end(){
 echo -e "\e[1;31m
@@ -294,13 +278,13 @@ case $testo in
     ;;
     E|e|"")
 	{
-			echo -e "\e[1;34mEsco dal programma\e[0m"
-			exit 0
+	echo -e "\e[1;34mEsco dal programma\e[0m"
+	exit 0
 	}
     ;;
     *)
-echo -e "\e[1;31m## HAI SBAGLIATO TASTO.......cerca di stare un po' attento\e[0m"
-    end
+	echo -e "\e[1;31m## HAI SBAGLIATO TASTO.......cerca di stare un po' attento\e[0m"
+	end
     ;;
 esac
 }
@@ -309,7 +293,7 @@ givemehelp(){
 echo "
 # debianupdate
 
-# Version:    1.0.0
+# Version:    1.0.1
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/debianupdate
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
@@ -320,9 +304,12 @@ soltanto operazioni sicure ed a richiedere l'intervento manuale unicamente per o
 
 ### CONFIGURAZIONE
 È possibile aumentare o diminuire il volume del segnale acustico tramite la scheda audio (tramite sox), agendo sul valore della
-variabile "GAIN" (linea 85; default "-50")
+variabile "GAIN" (linea 86; default -50)
 
 ### UTILIZZO
+Per utilizzare lo script basta digitare su un terminale:
+$ debianupdate
+
 È possibile utilizzare le seguenti opzioni:
 --menu	      Avvia il menu principale
 
