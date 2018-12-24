@@ -183,7 +183,7 @@ echo -e "\e[1;31m
 $BEEP1
 echo "" > $HOME/.status_files/debianupdate-status
 echo -e "\e[1;34m## UPDATE ##\e[0m" && sudo apt-get update 2>&1 | tee $HOME/.status_files/debianupdate-status
-	cat $HOME/.status_files/debianupdate-status | grep -q 'Risoluzione di "$REPO" temporaneamente non riuscita'
+	cat $HOME/.status_files/debianupdate-status | grep "Risoluzione di" | grep "$REPO" | grep "temporaneamente non riuscita"
 	if [ $? = 0 ]; then
 		update_error
 	else
@@ -196,7 +196,7 @@ upgrade1_process(){
 $BEEP1
 echo "" > $HOME/.status_files/debianupdate-status
 echo -e "\e[1;34m## UPGRADE ##\e[0m" && sudo apt-get upgrade -y 2>&1 | tee $HOME/.status_files/debianupdate-status
-	cat $HOME/.status_files/debianupdate-status | grep -q 'Risoluzione di "$REPO" temporaneamente non riuscita'
+	cat $HOME/.status_files/debianupdate-status | grep "Risoluzione di" | grep "$REPO" | grep "temporaneamente non riuscita"
 	if [ $? = 0 ]; then
 		update_error
 	else
@@ -209,7 +209,7 @@ upgrade2_process(){
 $BEEP1
 echo "" > $HOME/.status_files/debianupdate-status
 echo -e "\e[1;34m## UPGRADE (with-new-pkgs) ##\e[0m" && sudo apt-get upgrade --with-new-pkgs -y 2>&1 | tee $HOME/.status_files/debianupdate-status
-	cat $HOME/.status_files/debianupdate-status | grep -q 'Risoluzione di "$REPO" temporaneamente non riuscita'
+	cat $HOME/.status_files/debianupdate-status | grep "Risoluzione di" | grep "$REPO" | grep "temporaneamente non riuscita"
 	if [ $? = 0 ]; then
 		update_error
 	else
@@ -222,7 +222,7 @@ distupgrade_process(){
 $BEEP1
 echo "" > $HOME/.status_files/debianupdate-status
 echo -e "\e[1;34m## DIST-UPGRADE ##\e[0m" && sudo apt-get dist-upgrade 2>&1 | tee $HOME/.status_files/debianupdate-status
-	cat $HOME/.status_files/debianupdate-status | grep -q 'Risoluzione di "$REPO" temporaneamente non riuscita'
+	cat $HOME/.status_files/debianupdate-status | grep "Risoluzione di" | grep "$REPO" | grep "temporaneamente non riuscita"
 	if [ $? = 0 ]; then
 		update_error
 	else
