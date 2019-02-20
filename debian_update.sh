@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Version:    1.0.1
+# Version:    1.0.2
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/debianupdate
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
@@ -73,27 +73,47 @@ esac
 }
 
 audio_beep(){
-AUDIO=BEEP
-BEEP0=( "beep" )
-BEEP1=( "beep -f 2000 -r 3 -D 50 -l 60 -n" )
-BEEP2=( "beep -f 1000 -n -f 2000 -n -f 1500" )
+if which beep | grep -q "beep"; then
+	if lsmod | grep -q "pcspkr"; then
+		AUDIO=BEEP
+		BELL0=( "beep" )
+		BELL1=( "beep -f 2000 -r 3 -D 50 -l 60 -n" )
+		BELL2=( "beep -f 1000 -n -f 2000 -n -f 1500" )
+	else
+		AUDIO=NULL
+		BELL0="echo -n"
+		BELL1="echo -n"
+		BELL2="echo -n"
+	fi
+else
+	BELL0="echo -n"
+	BELL1="echo -n"
+	BELL2="echo -n"
+fi
 checkoldupdateprocess
 }
 
 audio_sox(){
-AUDIO=SOX
-GAIN=-50
-BEEP0=( "play -q -n synth 0.2 square 1000 gain $GAIN fade h 0.01" )
-BEEP1=( "play -q -n synth 0.13 square 2000 gain $GAIN : synth 0.13 square 2000 gain $GAIN fade h 0.01 : synth 0.13 square 2000 gain $GAIN fade h 0.01 : synth 0.3 square 1000 gain $GAIN fade h 0.01" )
-BEEP2=( "play -q -n synth 0.2 square 1000 gain $GAIN : synth 0.2 square 2000 gain $GAIN fade h 0.01 : synth 0.2 square 1500 gain $GAIN fade h 0.01" )
+if which sox | grep -q "sox"; then
+	AUDIO=SOX
+	GAIN=-50
+	BELL0=( "play -qn -t alsa synth 0.2 square 1000 gain $GAIN fade h 0.01" )
+	BELL1=( "play -qn -t alsa synth 0.13 square 2000 gain $GAIN : synth 0.13 square 2000 gain $GAIN fade h 0.01 : synth 0.13 square 2000 gain $GAIN fade h 0.01 : synth 0.3 square 1000 gain $GAIN fade h 0.01" )
+	BELL2=( "play -qn -t alsa synth 0.2 square 1000 gain $GAIN : synth 0.2 square 2000 gain $GAIN fade h 0.01 : synth 0.2 square 1500 gain $GAIN fade h 0.01" )
+else
+	AUDIO=NULL
+	BELL0="echo -n"
+	BELL1="echo -n"
+	BELL2="echo -n"
+fi
 checkoldupdateprocess
 }
 
 audio_null(){
 AUDIO=NULL
-BEEP0="echo BEEP"
-BEEP1="echo BEEP"
-BEEP2="echo BEEP"
+BELL0="echo -n"
+BELL1="echo -n"
+BELL2="echo -n"
 checkoldupdateprocess
 }
 
@@ -153,7 +173,7 @@ fping -r0 -t 2000 $REPO | grep "alive"
 if [ $? = 0 ]; then
 	break
 fi
-	$BEEP0
+	$BELL0 &
 	echo -e "\e[1;34m
 REPOSYTORY @ $REPO è\e[0m" "\e[1;31mOFFLINE o rete non raggiungibile\e[0m"
 	echo -e "\e[1;31mPremi INVIO per uscire, o attendi 1 secondo per riprovare\e[0m"
@@ -169,7 +189,7 @@ pre_update_process(){
 echo -e "\e[1;31m
 ## PRE UPDATE PROCESS STARTED (AUDIO: $AUDIO)
 \e[0m"
-$BEEP1
+$BELL1 &
 echo -e "\e[1;34m## INSTALLO EVENTUALI DIPENDENZE MANCANTI ##\e[0m" && sudo apt-get -f install -y
 echo -e "\e[1;34m## CONFIGURO EVENTUALI PACCHETTI IN SOSPESO ##\e[0m" && sudo dpkg --configure --pending
 STEP=update_process
@@ -180,7 +200,7 @@ update_process(){
 echo -e "\e[1;31m
 ## UPDATE PROCESS STARTED (AUDIO: $AUDIO)
 \e[0m"
-$BEEP1
+$BELL1 &
 echo "" > $HOME/.status_files/debianupdate-status
 echo -e "\e[1;34m## UPDATE ##\e[0m" && sudo apt-get update 2>&1 | tee $HOME/.status_files/debianupdate-status
 	cat $HOME/.status_files/debianupdate-status | grep "Risoluzione di" | grep "$REPO" | grep "temporaneamente non riuscita"
@@ -193,7 +213,7 @@ echo -e "\e[1;34m## UPDATE ##\e[0m" && sudo apt-get update 2>&1 | tee $HOME/.sta
 }
 
 upgrade1_process(){
-$BEEP1
+$BELL1 &
 echo "" > $HOME/.status_files/debianupdate-status
 echo -e "\e[1;34m## UPGRADE ##\e[0m" && sudo apt-get upgrade -y 2>&1 | tee $HOME/.status_files/debianupdate-status
 	cat $HOME/.status_files/debianupdate-status | grep "Risoluzione di" | grep "$REPO" | grep "temporaneamente non riuscita"
@@ -206,7 +226,7 @@ echo -e "\e[1;34m## UPGRADE ##\e[0m" && sudo apt-get upgrade -y 2>&1 | tee $HOME
 }
 
 upgrade2_process(){
-$BEEP1
+$BELL1 &
 echo "" > $HOME/.status_files/debianupdate-status
 echo -e "\e[1;34m## UPGRADE (with-new-pkgs) ##\e[0m" && sudo apt-get upgrade --with-new-pkgs -y 2>&1 | tee $HOME/.status_files/debianupdate-status
 	cat $HOME/.status_files/debianupdate-status | grep "Risoluzione di" | grep "$REPO" | grep "temporaneamente non riuscita"
@@ -219,7 +239,7 @@ echo -e "\e[1;34m## UPGRADE (with-new-pkgs) ##\e[0m" && sudo apt-get upgrade --w
 }
 
 distupgrade_process(){
-$BEEP1
+$BELL1 &
 echo "" > $HOME/.status_files/debianupdate-status
 echo -e "\e[1;34m## DIST-UPGRADE ##\e[0m" && sudo apt-get dist-upgrade 2>&1 | tee $HOME/.status_files/debianupdate-status
 	cat $HOME/.status_files/debianupdate-status | grep "Risoluzione di" | grep "$REPO" | grep "temporaneamente non riuscita"
@@ -232,17 +252,17 @@ echo -e "\e[1;34m## DIST-UPGRADE ##\e[0m" && sudo apt-get dist-upgrade 2>&1 | te
 }
 
 clean_process(){
-$BEEP1
+$BELL1 &
 echo -e "\e[1;34m## AUTOREMOVE ##\e[0m" && sudo apt-get autoremove -y
-$BEEP1
+$BELL1 &
 echo -e "\e[1;34m## PURGE ##\e[0m" && sudo aptitude purge ~c
 #sudo dpkg --purge `dpkg -l | egrep "^rc" | cut -d' ' -f3`
-$BEEP1
+$BELL1 &
 echo -e "\e[1;34m## AUTOCLEAN ##\e[0m" && sudo apt-get autoclean
-$BEEP1
+$BELL1
 echo -e "\e[1;34m## CLEAN ##\e[0m" && sudo apt-get clean
-$BEEP1
-$BEEP2
+$BELL1
+$BELL2 &
 echo -e "\e[1;34m## FINITO! ##\e[0m"
 STEP=update_process
 end
@@ -259,7 +279,7 @@ ping_repo
 }
 
 end(){
-echo -e "\e[1;31m
+echo -e "\e[1;35m
 Come vuoi proseguire?
 (U)pdate
 (E)sci dal programma
@@ -292,7 +312,7 @@ givemehelp(){
 echo "
 # debianupdate
 
-# Version:    1.0.1
+# Version:    1.0.2
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/debianupdate
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
@@ -303,7 +323,7 @@ soltanto operazioni sicure ed a richiedere l'intervento manuale unicamente per o
 
 ### CONFIGURAZIONE
 È possibile aumentare o diminuire il volume del segnale acustico tramite la scheda audio (tramite sox), agendo sul valore della
-variabile "GAIN" (linea 86; default -50)
+variabile "GAIN" (linea 99; default -50)
 
 ### UTILIZZO
 Per utilizzare lo script basta digitare su un terminale:
@@ -340,7 +360,7 @@ then
    givemehelp
 else
 #   menu
-#   audio_beep
-   audio_sox
+   audio_beep
+#   audio_sox
 #   audio_null
 fi
