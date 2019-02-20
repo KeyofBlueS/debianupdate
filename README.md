@@ -1,6 +1,6 @@
 # debianupdate
 
-# Version:    1.0.1
+# Version:    1.0.2
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/debianupdate
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
@@ -22,7 +22,7 @@ sudo ln -s /opt/debian-update/debian_update.sh /usr/local/bin/debianupdate
 
 ### CONFIGURAZIONE
 È possibile aumentare o diminuire il volume del segnale acustico tramite la scheda audio (tramite sox), agendo sul valore della
-variabile "GAIN" (linea 86; default -50)
+variabile "GAIN" (linea 99; default -50)
 
 ### UTILIZZO
 Per utilizzare lo script basta digitare su un terminale:
