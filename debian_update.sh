@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Version:    1.0.2
+# Version:    1.0.4
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/debianupdate
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
@@ -10,7 +10,6 @@ touch $HOME/.status_files/debianupdate-status
 
 APT_LISTCHANGES_FRONTEND=none
 STEP=pre_update_process
-REPO="$(cat /etc/apt/sources.list | grep "deb " | grep "http" | grep "main" | grep -m1 -oP '[^/]*\.[^\./]*(:|/)' | sed -e 's/\(:.*\/\|\/\)//g' | uniq)"
 
 #echo -n "Checking dependencies... "
 for name in fping apt aptitude
@@ -27,8 +26,7 @@ done
 
 menu(){
 echo -e "\e[1;34m
-## UPDATE DEBIAN\e[0m"
-echo -e "\e[1;31m
+## UPDATE DEBIAN\e[1;35m
 Che tipo di segnale acustico vuoi utilizzare?
 (B)eep
 (S)ox
@@ -128,8 +126,7 @@ ping_repo
 
 updatekill(){
 echo -e "\e[1;34m
-## UPDATE DEBIAN\e[0m"
-echo -e "\e[1;31m
+## UPDATE DEBIAN\e[1;31m
 Un altro processo di aggiornamento è già in esecuzione!
 Non è consigliabile terminare un processo di aggiornamento
 in corso! Terminarlo soltanto se si è sicuri che il vecchio
@@ -169,8 +166,8 @@ esac
 ping_repo(){
 while true
 do
-fping -r0 -t 2000 $REPO | grep "alive"
-if [ $? = 0 ]; then
+REPO="$(cat /etc/apt/sources.list | grep "deb " | grep "http" | grep "main" | grep -m1 -oP '[^/]*\.[^\./]*(:|/)' | sed -e 's/\(:.*\/\|\/\)//g' | uniq)"
+if fping -r0 -t 2000 $REPO | grep "alive"; then
 	break
 fi
 	$BELL0 &
@@ -203,52 +200,48 @@ echo -e "\e[1;31m
 $BELL1 &
 echo "" > $HOME/.status_files/debianupdate-status
 echo -e "\e[1;34m## UPDATE ##\e[0m" && sudo apt-get update 2>&1 | tee $HOME/.status_files/debianupdate-status
-	cat $HOME/.status_files/debianupdate-status | grep "Risoluzione di" | grep "$REPO" | grep "temporaneamente non riuscita"
-	if [ $? = 0 ]; then
-		update_error
-	else
+if cat $HOME/.status_files/debianupdate-status | grep "Risoluzione di" | grep "$REPO" | grep "temporaneamente non riuscita"; then
+	update_error
+else
 	STEP=upgrade1_process
 	ping_repo
-	fi
+fi
 }
 
 upgrade1_process(){
 $BELL1 &
 echo "" > $HOME/.status_files/debianupdate-status
 echo -e "\e[1;34m## UPGRADE ##\e[0m" && sudo apt-get upgrade -y 2>&1 | tee $HOME/.status_files/debianupdate-status
-	cat $HOME/.status_files/debianupdate-status | grep "Risoluzione di" | grep "$REPO" | grep "temporaneamente non riuscita"
-	if [ $? = 0 ]; then
-		update_error
-	else
+if cat $HOME/.status_files/debianupdate-status | grep "Risoluzione di" | grep "$REPO" | grep "temporaneamente non riuscita"; then
+	update_error
+else
 	STEP=upgrade2_process
 	ping_repo
-	fi
+fi
 }
 
 upgrade2_process(){
 $BELL1 &
 echo "" > $HOME/.status_files/debianupdate-status
 echo -e "\e[1;34m## UPGRADE (with-new-pkgs) ##\e[0m" && sudo apt-get upgrade --with-new-pkgs -y 2>&1 | tee $HOME/.status_files/debianupdate-status
-	cat $HOME/.status_files/debianupdate-status | grep "Risoluzione di" | grep "$REPO" | grep "temporaneamente non riuscita"
-	if [ $? = 0 ]; then
-		update_error
-	else
+if cat $HOME/.status_files/debianupdate-status | grep "Risoluzione di" | grep "$REPO" | grep "temporaneamente non riuscita"; then
+	update_error
+else
 	STEP=distupgrade_process
 	ping_repo
-	fi
+fi
 }
 
 distupgrade_process(){
 $BELL1 &
 echo "" > $HOME/.status_files/debianupdate-status
 echo -e "\e[1;34m## DIST-UPGRADE ##\e[0m" && sudo apt-get dist-upgrade 2>&1 | tee $HOME/.status_files/debianupdate-status
-	cat $HOME/.status_files/debianupdate-status | grep "Risoluzione di" | grep "$REPO" | grep "temporaneamente non riuscita"
-	if [ $? = 0 ]; then
-		update_error
-	else
+if cat $HOME/.status_files/debianupdate-status | grep "Risoluzione di" | grep "$REPO" | grep "temporaneamente non riuscita"; then
+	update_error
+else
 	echo "" > $HOME/.status_files/debianupdate-status
 	clean_process
-	fi
+fi
 }
 
 clean_process(){
@@ -270,8 +263,8 @@ end
 
 update_error(){
 echo -e "\e[1;34m
-REPOSYTORY @ $REPO è\e[0m" "\e[1;31mOFFLINE o rete non raggiungibile\e[0m"
-echo -e "\e[1;31mPremi INVIO per uscire, o attendi 1 secondo per riprovare\e[0m"
+REPOSYTORY @ $REPO è\e[0m" "\e[1;31mOFFLINE o rete non raggiungibile\e[1;31m
+Premi INVIO per uscire, o attendi 1 secondo per riprovare\e[0m"
 if read -t 1 _e; then
 	exit 0
 fi
@@ -289,7 +282,7 @@ read -p "Scelta (U/E): " testo
 case $testo in
     U|u)
 	{
-  echo -e "\e[1;34m
+	echo -e "\e[1;34m
 ## HAI SCELTO UPDATE\e[0m"
 	STEP=pre_update_process
 	ping_repo
@@ -312,7 +305,7 @@ givemehelp(){
 echo "
 # debianupdate
 
-# Version:    1.0.2
+# Version:    1.0.4
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/debianupdate
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
@@ -343,24 +336,19 @@ $ debianupdate
 exit 0
 }
 
-if [ "$1" = "--menu" ]
-then
-   menu
-elif [ "$1" = "--audio-beep" ]
-then
-   audio_beep
-elif [ "$1" = "--audio-sox" ]
-then
-   audio_sox
-elif [ "$1" = "--audio-null" ]
-then
-   audio_null
-elif [ "$1" = "--help" ]
-then
-   givemehelp
+if [ "$1" = "--menu" ]; then
+	menu
+elif [ "$1" = "--audio-beep" ]; then
+	audio_beep
+elif [ "$1" = "--audio-sox" ]; then
+	audio_sox
+elif [ "$1" = "--audio-null" ]; then
+	audio_null
+elif [ "$1" = "--help" ]; then
+	givemehelp
 else
-#   menu
-   audio_beep
-#   audio_sox
-#   audio_null
+#	menu
+	audio_beep
+#	audio_sox
+#	audio_null
 fi
