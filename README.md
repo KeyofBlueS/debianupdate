@@ -1,6 +1,6 @@
 # debianupdate
 
-# Version:    1.0.6
+# Version:    1.0.8
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/debianupdate
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
