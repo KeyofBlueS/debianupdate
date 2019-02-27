@@ -419,7 +419,7 @@ elif [ "$1" = "--help" ]; then
 	givemehelp
 else
 #	menu
-	audio_beep
-#	audio_sox
+#	audio_beep
+	audio_sox
 #	audio_null
 fi
