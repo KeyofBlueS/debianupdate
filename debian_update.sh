@@ -1,17 +1,25 @@
 #!/bin/bash
 
-# Version:    1.0.8
+# Version:    1.0.9
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/debianupdate
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
 
+# set to "true" to enable autoupdate of this script
+UPDATE=true
+
+if echo $UPDATE | grep -Eq '^(true|True|TRUE|si|NO|no)$'; then
+echo -e "\e[1;34mControllo aggiornamenti per questo script...\e[0m"
 if curl -s github.com > /dev/null; then
 	SCRIPT_LINK="https://raw.githubusercontent.com/KeyofBlueS/debianupdate/master/debian_update.sh"
 	UPSTREAM_VERSION="$(timeout -s SIGTERM 15 curl -L "$SCRIPT_LINK" 2> /dev/null | grep "# Version:" | head -n 1)"
 	LOCAL_VERSION="$(cat "${0}" | grep "# Version:" | head -n 1)"
 	REPOSITORY_LINK="$(cat "${0}" | grep "# Repository:" | head -n 1)"
 	if echo "$LOCAL_VERSION" | grep -q "$UPSTREAM_VERSION"; then
-		echo -n
+		echo -e "\e[1;32m
+## Questo script risulta aggiornato alla versione upstream
+\e[0m
+"
 	else
 		echo -e "\e[1;33m-----------------------------------------------------------------------------------	
 ## ATTENZIONE: questo script non risulta aggiornato alla versione upstream, visita:
@@ -74,6 +82,7 @@ Permesso negato!
 			fi
 		fi
 	fi
+fi
 fi
 
 mkdir -p $HOME/.status_files/
@@ -237,6 +246,17 @@ esac
 ping_repo(){
 while true
 do
+if echo $AUDIO | grep -xq "BEEP"; then
+	if lsmod | grep -q "pcspkr"; then
+		BELL0=( "beep" )
+		BELL1=( "beep -f 2000 -r 3 -D 50 -l 60 -n" )
+		BELL2=( "beep -f 1000 -n -f 2000 -n -f 1500" )
+	else
+		BELL0="echo -n"
+		BELL1="echo -n"
+		BELL2="echo -n"
+	fi
+fi
 REPO="$(cat /etc/apt/sources.list | grep "deb " | grep "http" | grep "main" | grep -m1 -oP '[^/]*\.[^\./]*(:|/)' | sed -e 's/\(:.*\/\|\/\)//g' | uniq)"
 if fping -r0 -t 2000 $REPO | grep "alive"; then
 	break
@@ -258,8 +278,14 @@ echo -e "\e[1;31m
 ## PRE UPDATE PROCESS STARTED (AUDIO: $AUDIO)
 \e[0m"
 $BELL1 &
-echo -e "\e[1;34m## INSTALLO EVENTUALI DIPENDENZE MANCANTI ##\e[0m" && sudo apt-get -f install -y
-echo -e "\e[1;34m## CONFIGURO EVENTUALI PACCHETTI IN SOSPESO ##\e[0m" && sudo dpkg --configure --pending
+echo -e "\e[1;34m## INSTALLO EVENTUALI DIPENDENZE MANCANTI ##\e[0m"
+sudo apt-get -f install -y
+if [ $? = 0 ]; then
+	sudo dpkg --configure --pending
+	sudo apt-get -f install -y
+fi
+echo -e "\e[1;34m## CONFIGURO EVENTUALI PACCHETTI IN SOSPESO ##\e[0m"
+sudo dpkg --configure --pending
 STEP=update_process
 ping_repo
 }
@@ -376,7 +402,7 @@ givemehelp(){
 echo "
 # debianupdate
 
-# Version:    1.0.8
+# Version:    1.0.9
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/debianupdate
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
@@ -387,7 +413,7 @@ soltanto operazioni sicure ed a richiedere l'intervento manuale unicamente per o
 
 ### CONFIGURAZIONE
 È possibile aumentare o diminuire il volume del segnale acustico tramite la scheda audio (tramite sox), agendo sul valore della
-variabile "GAIN" (linea 147; default -50)
+variabile "GAIN" (linea 177; default -50)
 
 ### UTILIZZO
 Per utilizzare lo script basta digitare su un terminale:
