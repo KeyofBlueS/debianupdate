@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Version:    1.0.9
+# Version:    1.0.10
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/debianupdate
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
@@ -88,21 +88,46 @@ fi
 mkdir -p $HOME/.status_files/
 touch $HOME/.status_files/debianupdate-status
 
+OPTIONS="-o Dpkg::Progress-Fancy=1 -o APT::Color=1 -o APT::Keep-Downloaded-Packages=0"
 APT_LISTCHANGES_FRONTEND=none
 STEP=pre_update_process
 
 #echo -n "Checking dependencies... "
-for name in fping apt aptitude
+for name in apt-get aptitude fping
 do
-  [[ $(which $name 2>/dev/null) ]] || { echo -en "\n$name è richiesto da questo script. Utilizza 'sudo apt-get install $name'";deps=1; }
+if which $name > /dev/null; then
+	echo -n
+else
+	if [ -z "${missing}" ]; then
+		missing="$name"
+	else
+		missing="$missing $name"
+	fi
+fi
 done
-[[ $deps -ne 1 ]] && echo "" || { echo -en "\nInstalla le dipendenze necessarie e riavvia questo script\n";exit 1; }
+if ! [ -z "${missing}" ]; then
+	echo -e "\e[1;31mQuesto script dipende da \e[1;34m$missing\e[1;31m. Utilizza \e[1;34msudo apt-get install $missing
+\e[1;31mInstalla le dipendenze necessarie e riavvia questo script.\e[0m"
+	exit 1
+fi
 
-for name in sox beep
+#echo -n "Checking recommended... "
+for name in beep sox
 do
-  [[ $(which $name 2>/dev/null) ]] || { echo -en "\n$name è consigliato da questo script. Utilizza 'sudo apt-get install $name'";deps=1; }
+if which $name > /dev/null; then
+	echo -n
+else
+	if [ -z "${missing}" ]; then
+		missing="$name"
+	else
+		missing="$missing $name"
+	fi
+fi
 done
-[[ $deps -ne 1 ]] && echo "" || { echo -en "\nInstalla le dipendenze consigliate e riavvia questo script\n"; }
+if ! [ -z "${missing}" ]; then
+	echo -e "\e[1;31mQuesto script consiglia \e[1;34m$missing\e[1;31m per poter utilizzare le segnalazioni acustiche. Utilizza \e[1;34msudo apt-get install $missing
+\e[1;31mSe preferisci, installa le dipendenze consigliate e riavvia questo script.\e[0m"
+fi
 
 menu(){
 echo -e "\e[1;34m
@@ -196,7 +221,9 @@ checkoldupdateprocess
 }
 
 checkoldupdateprocess(){
-for pid in $(pgrep "debianupdate"); do
+processpath="${0}"
+processname="${processpath##*/}"
+for pid in $(pgrep "$processname"); do
     if [ $pid != $$ ]; then
         updatekill
     fi 
@@ -279,10 +306,10 @@ echo -e "\e[1;31m
 \e[0m"
 $BELL1 &
 echo -e "\e[1;34m## INSTALLO EVENTUALI DIPENDENZE MANCANTI ##\e[0m"
-sudo apt-get -f install -y
+sudo apt-get $OPTIONS -f install -y
 if [ $? = 0 ]; then
 	sudo dpkg --configure --pending
-	sudo apt-get -f install -y
+	sudo apt-get $OPTIONS -f install -y
 fi
 echo -e "\e[1;34m## CONFIGURO EVENTUALI PACCHETTI IN SOSPESO ##\e[0m"
 sudo dpkg --configure --pending
@@ -296,7 +323,7 @@ echo -e "\e[1;31m
 \e[0m"
 $BELL1 &
 echo "" > $HOME/.status_files/debianupdate-status
-echo -e "\e[1;34m## UPDATE ##\e[0m" && sudo apt-get update 2>&1 | tee $HOME/.status_files/debianupdate-status
+echo -e "\e[1;34m## UPDATE ##\e[0m" && sudo apt-get $OPTIONS update 2>&1 | tee $HOME/.status_files/debianupdate-status
 if cat $HOME/.status_files/debianupdate-status | grep "Risoluzione di" | grep "$REPO" | grep "temporaneamente non riuscita"; then
 	update_error
 else
@@ -308,7 +335,7 @@ fi
 upgrade1_process(){
 $BELL1 &
 echo "" > $HOME/.status_files/debianupdate-status
-echo -e "\e[1;34m## UPGRADE ##\e[0m" && sudo apt-get upgrade -y 2>&1 | tee $HOME/.status_files/debianupdate-status
+echo -e "\e[1;34m## UPGRADE ##\e[0m" && sudo apt-get $OPTIONS upgrade -y 2>&1 | tee $HOME/.status_files/debianupdate-status
 if cat $HOME/.status_files/debianupdate-status | grep "Risoluzione di" | grep "$REPO" | grep "temporaneamente non riuscita"; then
 	update_error
 else
@@ -320,7 +347,7 @@ fi
 upgrade2_process(){
 $BELL1 &
 echo "" > $HOME/.status_files/debianupdate-status
-echo -e "\e[1;34m## UPGRADE (with-new-pkgs) ##\e[0m" && sudo apt-get upgrade --with-new-pkgs -y 2>&1 | tee $HOME/.status_files/debianupdate-status
+echo -e "\e[1;34m## UPGRADE (with-new-pkgs) ##\e[0m" && sudo apt-get $OPTIONS upgrade --with-new-pkgs -y 2>&1 | tee $HOME/.status_files/debianupdate-status
 if cat $HOME/.status_files/debianupdate-status | grep "Risoluzione di" | grep "$REPO" | grep "temporaneamente non riuscita"; then
 	update_error
 else
@@ -332,7 +359,7 @@ fi
 distupgrade_process(){
 $BELL1 &
 echo "" > $HOME/.status_files/debianupdate-status
-echo -e "\e[1;34m## DIST-UPGRADE ##\e[0m" && sudo apt-get dist-upgrade 2>&1 | tee $HOME/.status_files/debianupdate-status
+echo -e "\e[1;34m## DIST-UPGRADE ##\e[0m" && sudo apt-get $OPTIONS dist-upgrade 2>&1 | tee $HOME/.status_files/debianupdate-status
 if cat $HOME/.status_files/debianupdate-status | grep "Risoluzione di" | grep "$REPO" | grep "temporaneamente non riuscita"; then
 	update_error
 else
@@ -343,14 +370,14 @@ fi
 
 clean_process(){
 $BELL1 &
-echo -e "\e[1;34m## AUTOREMOVE ##\e[0m" && sudo apt-get autoremove -y
+echo -e "\e[1;34m## AUTOREMOVE ##\e[0m" && sudo apt-get $OPTIONS autoremove -y
 $BELL1 &
 echo -e "\e[1;34m## PURGE ##\e[0m" && sudo aptitude purge ~c
 #sudo dpkg --purge `dpkg -l | egrep "^rc" | cut -d' ' -f3`
 $BELL1 &
-echo -e "\e[1;34m## AUTOCLEAN ##\e[0m" && sudo apt-get autoclean
+echo -e "\e[1;34m## AUTOCLEAN ##\e[0m" && sudo apt-get $OPTIONS autoclean
 $BELL1
-echo -e "\e[1;34m## CLEAN ##\e[0m" && sudo apt-get clean
+echo -e "\e[1;34m## CLEAN ##\e[0m" && sudo apt-get $OPTIONS clean
 $BELL1
 $BELL2 &
 echo -e "\e[1;34m## FINITO! ##\e[0m"
@@ -402,7 +429,7 @@ givemehelp(){
 echo "
 # debianupdate
 
-# Version:    1.0.9
+# Version:    1.0.10
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/debianupdate
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
@@ -413,7 +440,7 @@ soltanto operazioni sicure ed a richiedere l'intervento manuale unicamente per o
 
 ### CONFIGURAZIONE
 È possibile aumentare o diminuire il volume del segnale acustico tramite la scheda audio (tramite sox), agendo sul valore della
-variabile "GAIN" (linea 177; default -50)
+variabile "GAIN" (linea 202; default -50)
 
 ### UTILIZZO
 Per utilizzare lo script basta digitare su un terminale:
